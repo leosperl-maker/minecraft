@@ -28,11 +28,8 @@ export class XPSystem {
   }
 
   private getXPForLevel(level: number): number {
-    let total = 0;
-    for (let i = 1; i <= level; i++) {
-      total += i * 7;
-    }
-    return total;
+    // Sum of i*7 for i=1..level = 7 * level*(level+1)/2 = 3.5 * level * (level+1)
+    return 3.5 * level * (level + 1);
   }
 
   private recalculateLevel(): void {
