@@ -248,7 +248,9 @@ export class Player {
     if (!this.world) return;
 
     // Check if body is in water (feet level or waist level)
-    const feetInWater = this.world.isWater(this.x, this.y + 0.1, this.z);
+    // Use y (not y+0.1) so water detection triggers as soon as the player's feet
+    // enter the water block, preventing a brief "air mode" while falling into water
+    const feetInWater = this.world.isWater(this.x, this.y, this.z);
     const waistInWater = this.world.isWater(this.x, this.y + 0.8, this.z);
     const headInWater = this.world.isWater(this.x, this.y + PLAYER_EYE_HEIGHT, this.z);
 
@@ -318,8 +320,10 @@ export class Player {
       this.vy = -SWIM_DOWN_SPEED;
     } else {
       // Apply gentle gravity (sinking) + buoyancy
+      // Factor 0.75 gives slight net upward force so the player floats toward
+      // the surface without needing to hold Space continuously
       this.vy -= WATER_GRAVITY * dt;
-      this.vy += WATER_BUOYANCY * dt * 0.3;
+      this.vy += WATER_BUOYANCY * dt * 0.75;
 
       // When actively moving forward, use the look direction for vertical
       if (isMoving) {
@@ -327,8 +331,8 @@ export class Player {
       }
     }
 
-    // Water drag
-    this.vy *= WATER_DRAG;
+    // Water drag — apply as framerate-independent factor (designed for 60fps baseline)
+    this.vy *= Math.pow(WATER_DRAG, dt * 60);
     this.vy = clamp(this.vy, -SWIM_DOWN_SPEED * 2, SWIM_UP_FORCE);
 
     // Swimming stroke animation phase

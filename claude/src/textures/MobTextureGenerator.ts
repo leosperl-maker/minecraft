@@ -76,6 +76,11 @@ export class MobTextureGenerator {
       case MobType.SHARK: return this.generateShark();
       case MobType.FISH: return this.generateFish();
       case MobType.DOLPHIN: return this.generateDolphin();
+      case MobType.CHICKEN: return this.generateChicken();
+      case MobType.WOLF: return this.generateWolf();
+      case MobType.BEE: return this.generateBee();
+      case MobType.ENDERMAN: return this.generateEnderman();
+      case MobType.WITHER_DRAGON: return this.generateWitherDragon();
       default: return this.generateZombie();
     }
   }
@@ -756,6 +761,348 @@ export class MobTextureGenerator {
     };
     result['tail'] = finTex(59002);
     result['finDorsal'] = finTex(59003);
+
+    return result;
+  }
+
+  private generateChicken(): PartTextureSet {
+    const s = TEX_SIZE;
+    const result: PartTextureSet = {};
+
+    // Head: white with red wattle, orange beak area
+    const head = this.createCanvas(s);
+    const rng = new SeededRandom(61001);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([245, 238, 220, 255], 10, rng);
+        // Eyes: small black dots
+        if (((x >= 8 && x <= 10) || (x >= 20 && x <= 22)) && y >= 10 && y <= 12) {
+          c = [20, 15, 10, 255];
+        }
+        // Beak (orange): center bottom half
+        if (x >= 13 && x <= 18 && y >= 16 && y <= 22) {
+          c = colorVar([235, 150, 40, 255], 12, rng);
+        }
+        // Red wattle under beak
+        if (x >= 14 && x <= 17 && y >= 21 && y <= 27) {
+          c = colorVar([210, 50, 40, 255], 15, rng);
+        }
+        // Red comb on top
+        if (x >= 12 && x <= 19 && y >= 0 && y <= 5) {
+          c = colorVar([215, 45, 35, 255], 12, rng);
+        }
+        setPixel(head.data.data, x, y, s, c);
+      }
+    }
+    result['head'] = this.finalize(head.canvas, head.data);
+    result['head_side'] = this.makeBaseTex(61050, [245, 238, 220, 255], 10);
+
+    // Body: white/cream feathers
+    const bodyTex = (seed: number): HTMLCanvasElement => {
+      const b = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          let c = colorVar([240, 233, 215, 255], 12, r);
+          const feather = Math.sin(x * 1.2 + y * 0.9) * 0.5;
+          if (feather > 0.3) c = mix(c, [255, 248, 230, 255] as RGBA, 0.3) as RGBA;
+          setPixel(b.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(b.canvas, b.data);
+    };
+    result['body'] = bodyTex(61002);
+    result['wingLeft'] = bodyTex(61003);
+    result['wingRight'] = bodyTex(61004);
+
+    // Legs: orange
+    const legTex = (seed: number): HTMLCanvasElement => {
+      const l = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          const c = colorVar([225, 140, 35, 255], 12, r);
+          setPixel(l.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(l.canvas, l.data);
+    };
+    result['legLeft'] = legTex(61005);
+    result['legRight'] = legTex(61006);
+
+    return result;
+  }
+
+  private generateWolf(): PartTextureSet {
+    const s = TEX_SIZE;
+    const result: PartTextureSet = {};
+
+    // Head: gray with white snout, dark eyes
+    const head = this.createCanvas(s);
+    const rng = new SeededRandom(62001);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([148, 148, 148, 255], 14, rng);
+        // Darker forehead/ears
+        if (y < 6) c = colorVar([105, 105, 105, 255], 12, rng);
+        // White snout area
+        if (x >= 10 && x <= 21 && y >= 16 && y <= 28) {
+          c = colorVar([220, 218, 210, 255], 8, rng);
+        }
+        // Eyes: amber
+        if (((x >= 6 && x <= 9) || (x >= 21 && x <= 24)) && y >= 9 && y <= 12) {
+          c = [180, 130, 30, 255];
+          if ((x === 7 || x === 8 || x === 22 || x === 23) && (y === 10 || y === 11)) {
+            c = [30, 20, 10, 255];
+          }
+        }
+        // Dark nose
+        if (x >= 13 && x <= 18 && y >= 20 && y <= 23) {
+          c = [40, 35, 30, 255];
+        }
+        setPixel(head.data.data, x, y, s, c);
+      }
+    }
+    result['head'] = this.finalize(head.canvas, head.data);
+    result['head_side'] = this.makeBaseTex(62050, [148, 148, 148, 255], 14);
+
+    // Body: gray with darker back
+    const body = this.createCanvas(s);
+    const bodyRng = new SeededRandom(62002);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([145, 145, 145, 255], 15, bodyRng);
+        if (y < s * 0.35) c = colorVar([115, 115, 115, 255], 12, bodyRng);
+        if (y > s * 0.7) c = mix(c, [200, 198, 190, 255] as RGBA, 0.25) as RGBA;
+        setPixel(body.data.data, x, y, s, c);
+      }
+    }
+    result['body'] = this.finalize(body.canvas, body.data);
+
+    // Legs: gray
+    const legTex = (seed: number): HTMLCanvasElement => {
+      const l = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          let c = colorVar([140, 140, 140, 255], 12, r);
+          if (y > s * 0.75) c = colorVar([100, 98, 95, 255], 8, r);
+          setPixel(l.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(l.canvas, l.data);
+    };
+    result['legFL'] = legTex(62003);
+    result['legFR'] = legTex(62004);
+    result['legBL'] = legTex(62005);
+    result['legBR'] = legTex(62006);
+
+    // Tail: gray/white
+    const tail = this.createCanvas(s);
+    const tailRng = new SeededRandom(62007);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([155, 155, 155, 255], 12, tailRng);
+        if (y > s * 0.6) c = colorVar([220, 218, 210, 255], 8, tailRng);
+        setPixel(tail.data.data, x, y, s, c);
+      }
+    }
+    result['tail'] = this.finalize(tail.canvas, tail.data);
+
+    return result;
+  }
+
+  private generateBee(): PartTextureSet {
+    const s = TEX_SIZE;
+    const result: PartTextureSet = {};
+
+    // Body: yellow and black stripes
+    const body = this.createCanvas(s);
+    const rng = new SeededRandom(63001);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        const stripe = Math.floor(y / 5) % 2 === 0;
+        let c: RGBA;
+        if (stripe) {
+          c = colorVar([255, 210, 30, 255], 15, rng);
+        } else {
+          c = colorVar([30, 25, 20, 255], 8, rng);
+        }
+        // Fuzzy texture
+        if (rng.next() < 0.07) c = mix(c, [200, 165, 25, 255] as RGBA, 0.4) as RGBA;
+        setPixel(body.data.data, x, y, s, c);
+      }
+    }
+    result['body'] = this.finalize(body.canvas, body.data);
+
+    // Head: fuzzy yellow with eyes
+    const head = this.createCanvas(s);
+    const headRng = new SeededRandom(63002);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([245, 200, 25, 255], 15, headRng);
+        // Eyes: large compound eyes
+        const isLeftEye = x >= 4 && x <= 10 && y >= 8 && y <= 18;
+        const isRightEye = x >= 20 && x <= 26 && y >= 8 && y <= 18;
+        if (isLeftEye || isRightEye) {
+          c = [25, 80, 25, 255];
+          if ((x === 7 || x === 8 || x === 22 || x === 23) && (y >= 11 && y <= 15)) {
+            c = [45, 120, 45, 255];
+          }
+        }
+        setPixel(head.data.data, x, y, s, c);
+      }
+    }
+    result['head'] = this.finalize(head.canvas, head.data);
+    result['head_side'] = this.makeBaseTex(63050, [245, 200, 25, 255], 15);
+
+    // Wings: translucent-look (light blue/white)
+    const wingTex = (seed: number): HTMLCanvasElement => {
+      const w = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          const vein = (Math.sin(x * 2.0 + y * 0.5) + Math.sin(x * 0.8 + y * 2.2)) * 0.5;
+          let c: RGBA;
+          if (vein > 0.4) {
+            c = colorVar([180, 210, 240, 200], 15, r);
+          } else {
+            c = colorVar([210, 230, 255, 160], 10, r);
+          }
+          setPixel(w.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(w.canvas, w.data);
+    };
+    result['wingLeft'] = wingTex(63003);
+    result['wingRight'] = wingTex(63004);
+
+    return result;
+  }
+
+  private generateEnderman(): PartTextureSet {
+    const s = TEX_SIZE;
+    const result: PartTextureSet = {};
+
+    // Head: pitch black with glowing purple eyes
+    const head = this.createCanvas(s);
+    const rng = new SeededRandom(64001);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([18, 12, 22, 255], 6, rng);
+        if (rng.next() < 0.04) c = mix(c, [35, 20, 45, 255] as RGBA, 0.5) as RGBA;
+        // Glowing purple eyes
+        const isLeftEye = x >= 5 && x <= 11 && y >= 11 && y <= 15;
+        const isRightEye = x >= 19 && x <= 25 && y >= 11 && y <= 15;
+        if (isLeftEye || isRightEye) {
+          c = [155, 30, 200, 255];
+          if (((x >= 7 && x <= 9) || (x >= 21 && x <= 23)) && (y >= 12 && y <= 14)) {
+            c = [200, 80, 255, 255];
+          }
+        }
+        setPixel(head.data.data, x, y, s, c);
+      }
+    }
+    result['head'] = this.finalize(head.canvas, head.data);
+    result['head_side'] = this.makeBaseTex(64050, [18, 12, 22, 255], 6);
+
+    // Body: very dark with subtle purple shimmer
+    const darkBodyTex = (seed: number): HTMLCanvasElement => {
+      const b = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          let c = colorVar([16, 10, 20, 255], 6, r);
+          const shimmer = Math.sin(x * 0.9 + seed * 0.01) * Math.sin(y * 1.1 + seed * 0.02);
+          if (shimmer > 0.5) c = mix(c, [60, 20, 80, 255] as RGBA, 0.35) as RGBA;
+          setPixel(b.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(b.canvas, b.data);
+    };
+    result['body'] = darkBodyTex(64002);
+    result['armLeft'] = darkBodyTex(64003);
+    result['armRight'] = darkBodyTex(64004);
+    result['legLeft'] = darkBodyTex(64005);
+    result['legRight'] = darkBodyTex(64006);
+
+    return result;
+  }
+
+  private generateWitherDragon(): PartTextureSet {
+    const s = TEX_SIZE;
+    const result: PartTextureSet = {};
+
+    // Head: dark black/grey with glowing eyes and menacing features
+    const head = this.createCanvas(s);
+    const rng = new SeededRandom(65001);
+    for (let y = 0; y < s; y++) {
+      for (let x = 0; x < s; x++) {
+        let c = colorVar([28, 22, 30, 255], 8, rng);
+        // Bone-like ridge patterns
+        const ridge = Math.sin(x * 0.6) * Math.sin(y * 0.4);
+        if (ridge > 0.4) c = mix(c, [65, 55, 70, 255] as RGBA, 0.4) as RGBA;
+        // Glowing eyes (blue-white Wither style)
+        const isLeftEye = x >= 4 && x <= 10 && y >= 9 && y <= 15;
+        const isRightEye = x >= 20 && x <= 26 && y >= 9 && y <= 15;
+        if (isLeftEye || isRightEye) {
+          c = [120, 140, 180, 255];
+          if (((x >= 6 && x <= 8) || (x >= 22 && x <= 24)) && (y >= 11 && y <= 13)) {
+            c = [200, 220, 255, 255];
+          }
+        }
+        // Dark gaping jaw area
+        if (y >= 20 && y <= 28 && x >= 6 && x <= 25) {
+          c = colorVar([18, 14, 20, 255], 5, rng);
+          if (y >= 22 && y <= 26 && x % 4 < 2) c = [80, 65, 85, 255];
+        }
+        setPixel(head.data.data, x, y, s, c);
+      }
+    }
+    result['head'] = this.finalize(head.canvas, head.data);
+    result['head_side'] = this.makeBaseTex(65050, [28, 22, 30, 255], 8);
+
+    // Body: dark armor-like scales
+    const scaleTex = (seed: number, baseCol: RGBA): HTMLCanvasElement => {
+      const b = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          let c = colorVar(baseCol, 10, r);
+          const scaleX = Math.floor(x / 4);
+          const scaleY = Math.floor(y / 4);
+          const scaleOff = (scaleX + scaleY) % 2;
+          if (scaleOff === 0) c = mix(c, [12, 8, 16, 255] as RGBA, 0.3) as RGBA;
+          const edge = (x % 4 === 0 || y % 4 === 0);
+          if (edge) c = mix(c, [8, 5, 12, 255] as RGBA, 0.5) as RGBA;
+          setPixel(b.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(b.canvas, b.data);
+    };
+    result['body'] = scaleTex(65002, [30, 24, 36, 255]);
+
+    // Wings: dark membrane with bone struts
+    const wingTex = (seed: number): HTMLCanvasElement => {
+      const w = this.createCanvas(s);
+      const r = new SeededRandom(seed);
+      for (let y = 0; y < s; y++) {
+        for (let x = 0; x < s; x++) {
+          let c = colorVar([22, 16, 28, 255], 8, r);
+          // Bone struts
+          const strutH = (x % 8 === 0 || x % 8 === 1);
+          const strutV = (y % 10 === 0);
+          if (strutH || strutV) c = colorVar([55, 48, 60, 255], 8, r);
+          setPixel(w.data.data, x, y, s, c);
+        }
+      }
+      return this.finalize(w.canvas, w.data);
+    };
+    result['wingLeft'] = wingTex(65003);
+    result['wingRight'] = wingTex(65004);
+
+    // Tail
+    result['tail'] = scaleTex(65005, [26, 20, 32, 255]);
 
     return result;
   }
