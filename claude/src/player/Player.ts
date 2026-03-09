@@ -101,6 +101,10 @@ export class Player {
 
   private mouseSensitivity = 0.002;
 
+  // Reusable objects to avoid per-frame allocations
+  private readonly _euler = new THREE.Euler(0, 0, 0, 'YXZ');
+  private readonly _lookDir = new THREE.Vector3();
+
   setMouseSensitivity(multiplier: number): void {
     this.mouseSensitivity = 0.002 * multiplier;
   }
@@ -555,22 +559,24 @@ export class Player {
     }
 
     // Set camera rotation from yaw/pitch
-    const euler = new THREE.Euler(this.pitch, this.yaw, 0, 'YXZ');
-    this.camera.quaternion.setFromEuler(euler);
+    this._euler.set(this.pitch, this.yaw, 0);
+    this.camera.quaternion.setFromEuler(this._euler);
 
     // Subtle roll when swimming for immersion
     if (this.isSwimming && this.underwaterFactor > 0.1) {
       const roll = Math.sin(this.swimStrokePhase * 1.3) * 0.02 * this.underwaterFactor;
-      euler.z = roll;
-      this.camera.quaternion.setFromEuler(euler);
+      this._euler.z = roll;
+      this.camera.quaternion.setFromEuler(this._euler);
     }
   }
 
   private updateSurvival(dt: number): void {
-    // Track movement distance for hunger drain
+    // Track movement distance for hunger drain and stats
     const dx = this.x - this.lastX;
     const dz = this.z - this.lastZ;
-    this.distanceMoved += Math.sqrt(dx * dx + dz * dz);
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    this.distanceMoved += dist;
+    this.totalDistanceTraveled += dist;
     this.lastX = this.x;
     this.lastZ = this.z;
 
@@ -624,11 +630,12 @@ export class Player {
     }
   }
 
-  /** Get the direction the player is looking */
+  /** Get the direction the player is looking.
+   *  WARNING: do not store the returned reference — it is a shared internal vector. */
   getLookDirection(): THREE.Vector3 {
-    const dir = new THREE.Vector3(0, 0, -1);
-    dir.applyQuaternion(this.camera.quaternion);
-    return dir;
+    this._lookDir.set(0, 0, -1);
+    this._lookDir.applyQuaternion(this.camera.quaternion);
+    return this._lookDir;
   }
 
   /** Eat food to restore hunger and saturation */

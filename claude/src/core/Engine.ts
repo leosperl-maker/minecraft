@@ -97,6 +97,8 @@ export class Engine {
 
   // Reusable vectors to avoid GC pressure in game loop
   private readonly _camDir = new THREE.Vector3();
+  private readonly _biomeFog = new THREE.Vector3();
+  private readonly _biomeColor = new THREE.Vector3();
   private achievementTimer: number = 0;
   private menuTime: number = 0;
 
@@ -575,12 +577,14 @@ export class Engine {
     );
 
     // Biome-based fog tinting
-    const biomeFog = this.sky.fogColor.clone();
+    this._biomeFog.copy(this.sky.fogColor);
     if (this.world.biomeSystem) {
       const biome = this.world.biomeSystem.getBiome(Math.floor(this.player.x), Math.floor(this.player.z));
       const bc = this.world.biomeSystem.getConfig(biome);
-      biomeFog.lerp(new THREE.Vector3(bc.fogColor[0], bc.fogColor[1], bc.fogColor[2]), 0.3);
+      this._biomeColor.set(bc.fogColor[0], bc.fogColor[1], bc.fogColor[2]);
+      this._biomeFog.lerp(this._biomeColor, 0.3);
     }
+    const biomeFog = this._biomeFog;
 
     // Terrain material uniforms
     updateMaterialUniforms(

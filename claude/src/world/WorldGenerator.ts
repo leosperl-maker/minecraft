@@ -1,12 +1,11 @@
 import { Chunk } from './Chunk';
 import { BlockType } from '../blocks/BlockTypes';
-import { CHUNK_SIZE, WORLD_HEIGHT } from '../utils/constants';
+import { CHUNK_SIZE, WORLD_HEIGHT, SEA_LEVEL } from '../utils/constants';
 import { fbm2d, noise2d, noise3d } from '../utils/noise';
 import { StructureGenerator, StructureTypeName, StructureLocation } from './StructureGenerator';
 import { ChestManager } from './ChestManager';
 import { BiomeSystem, Biome, TreeType } from './BiomeSystem';
 
-const SEA_LEVEL = 34;
 const BASE_HEIGHT = 30;
 const HEIGHT_SCALE = 38;
 
@@ -262,6 +261,14 @@ export class WorldGenerator {
   }
 
   private placeTreeByType(chunk: Chunk, x: number, y: number, z: number, treeType: TreeType, biome: Biome): void {
+    // In forests, mix in birch trees (30% chance) — checked BEFORE placing the oak
+    if (biome === Biome.FOREST && treeType === 'oak') {
+      const hash = this.hashPosition(x + chunk.worldX + 999, z + chunk.worldZ + 777);
+      if ((hash % 10) < 3) {
+        this.placeBirchTree(chunk, x, y, z);
+        return;
+      }
+    }
     switch (treeType) {
       case 'oak': this.placeOakTree(chunk, x, y, z); break;
       case 'birch': this.placeBirchTree(chunk, x, y, z); break;
@@ -269,14 +276,6 @@ export class WorldGenerator {
       case 'jungle': this.placeJungleTree(chunk, x, y, z); break;
       case 'acacia': this.placeAcaciaTree(chunk, x, y, z); break;
       case 'swamp_oak': this.placeSwampOakTree(chunk, x, y, z); break;
-    }
-    // In forests, mix in birch trees (30% chance)
-    if (biome === Biome.FOREST && treeType === 'oak') {
-      const hash = this.hashPosition(x + chunk.worldX + 999, z + chunk.worldZ + 777);
-      if ((hash % 10) < 3) {
-        // Replace the oak with birch - clear and redo
-        // (simple approach: just place birch sometimes instead of oak)
-      }
     }
   }
 
@@ -452,7 +451,7 @@ export class WorldGenerator {
       for (let lz = 0; lz < CHUNK_SIZE; lz++) {
         const wx = wx0 + lx;
         const wz = wz0 + lz;
-        for (let y = 2; y < 60; y += 2) {
+        for (let y = 2; y < 60; y++) {
           const block = chunk.getBlock(lx, y, lz);
           if (block === BlockType.AIR || block === BlockType.WATER || block === BlockType.BEDROCK) continue;
 
