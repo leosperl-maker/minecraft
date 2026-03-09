@@ -16,6 +16,8 @@ export class MobManager {
   readonly waterParticles: WaterParticleSystem;
   private particleTimer: number = 0;
 
+  onMobKilled: ((entity: Entity) => void) | null = null;
+
   constructor(scene: THREE.Scene, physics: Physics, world: World) {
     this.scene = scene;
     this.physics = physics;
@@ -40,6 +42,30 @@ export class MobManager {
     // Update existing mobs
     for (const mob of this.mobs) {
       mob.update(dt, this.physics, playerX, playerY, playerZ);
+    }
+
+    // Sunlight burning for hostile mobs during daytime
+    if (dayFactor > 0.85) {
+      for (const mob of this.mobs) {
+        if (mob.isDead || !mob.definition.hostile || mob.definition.aquatic) continue;
+        // Check if exposed to sky (no solid block within 5 blocks above)
+        const checkX = Math.floor(mob.x);
+        const checkZ = Math.floor(mob.z);
+        const topY = Math.floor(mob.y + mob.definition.height) + 1;
+        let exposed = true;
+        for (let cy = topY; cy < topY + 6; cy++) {
+          if (this.world.isSolid(checkX, cy, checkZ)) { exposed = false; break; }
+        }
+        if (exposed) {
+          mob.burnTimer += dt;
+          if (mob.burnTimer >= 1.0) {
+            mob.burnTimer = 0;
+            mob.takeDamage(1, 0, 0, 0);
+          }
+        } else {
+          mob.burnTimer = 0;
+        }
+      }
     }
 
     // Emit water particles for aquatic mobs near surface
@@ -85,6 +111,9 @@ export class MobManager {
 
   private removeMobAt(index: number): void {
     const mob = this.mobs[index];
+    if (mob.isDead && this.onMobKilled) {
+      this.onMobKilled(mob);
+    }
     this.scene.remove(mob.model.group);
     mob.dispose();
     this.mobs.splice(index, 1);

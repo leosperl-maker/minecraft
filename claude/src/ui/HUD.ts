@@ -28,6 +28,8 @@ export class HUD {
   private lastHealth: number = 20;
   private damageFlashTime: number = 0;
   private isAimingAtMob: boolean = false;
+  private xpLevel: number = 0;
+  private xpProgress: number = 0;
 
   constructor(atlas: TextureAtlas, inventory: InventorySystem) {
     this.atlas = atlas;
@@ -274,6 +276,11 @@ export class HUD {
     this.isAimingAtMob = aiming;
   }
 
+  setXPData(level: number, progress: number): void {
+    this.xpLevel = level;
+    this.xpProgress = progress;
+  }
+
   update(fps: number, player: Player, sky: Sky, dt: number): void {
     // Debug info
     const ridingInfo = player.isRiding ? ' [RIDING]' : '';
@@ -349,10 +356,14 @@ export class HUD {
       this.oxygenBarEl.style.overflow = 'hidden';
     }
 
-    // Update XP bar (cosmetic for now)
+    // Update XP bar
     const xpFill = this.xpBarEl.querySelector('.xp-fill') as HTMLElement;
     if (xpFill) {
-      xpFill.style.width = '0%';
+      xpFill.style.width = `${Math.round(this.xpProgress * 100)}%`;
+    }
+    const xpLevelEl = this.xpBarEl.querySelector('.xp-level') as HTMLElement;
+    if (xpLevelEl && this.xpLevel > 0) {
+      xpLevelEl.textContent = String(this.xpLevel);
     }
 
     // Update hotbar slots

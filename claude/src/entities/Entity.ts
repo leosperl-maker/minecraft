@@ -4,7 +4,7 @@ import { MobModel, createMobModel, animateMobModel, disposeMobModel } from './Mo
 import { MobAI } from './MobAI';
 import { Physics, AABB } from '../player/Physics';
 import { World } from '../world/World';
-import { GRAVITY, TERMINAL_VELOCITY } from '../utils/constants';
+import { GRAVITY, TERMINAL_VELOCITY, SEA_LEVEL } from '../utils/constants';
 import { clamp } from '../utils/math';
 
 export class Entity {
@@ -36,6 +36,7 @@ export class Entity {
   // Timers
   hurtTimer: number = 0;
   deathTimer: number = 0;
+  burnTimer: number = 0;
   private readonly HURT_FLASH_DURATION = 0.3;
   private readonly DEATH_DURATION = 1.0;
 
@@ -84,6 +85,11 @@ export class Entity {
       this.vx *= 0.98;
       this.vy *= 0.98;
       this.vz *= 0.98;
+      // Cap at sea level so aquatic mobs never fly above water
+      if (this.y > SEA_LEVEL - 0.5) {
+        this.y = SEA_LEVEL - 0.5;
+        if (this.vy > 0) this.vy = 0;
+      }
       this.grounded = false;
     } else {
       // Apply gravity

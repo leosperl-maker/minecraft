@@ -445,13 +445,16 @@ export class WorldGenerator {
   private generateCaves(chunk: Chunk, wx0: number, wz0: number): void {
     const caveScale1 = 0.035;
     const caveScale2 = 0.04;
-    const caveThreshold = 0.42;
+    // Reduced threshold from 0.42 to 0.28 to prevent excessive cave density
+    // and surface breakthrough. Lower = fewer/smaller caves.
+    const caveThreshold = 0.28;
 
     for (let lx = 0; lx < CHUNK_SIZE; lx++) {
       for (let lz = 0; lz < CHUNK_SIZE; lz++) {
         const wx = wx0 + lx;
         const wz = wz0 + lz;
-        for (let y = 2; y < 60; y++) {
+        // Reduced max cave height from 60 to 48 to avoid surface holes
+        for (let y = 2; y < 48; y++) {
           const block = chunk.getBlock(lx, y, lz);
           if (block === BlockType.AIR || block === BlockType.WATER || block === BlockType.BEDROCK) continue;
 
@@ -461,9 +464,15 @@ export class WorldGenerator {
           const isCave = Math.abs(n1) < caveThreshold && Math.abs(n2) < caveThreshold;
           if (isCave) {
             chunk.setBlock(lx, y, lz, BlockType.AIR);
-            if (y + 1 < 60) {
+            // Only clear the block above if the block 2 above is solid (prevents
+            // surface holes when a cave is just 1 block below the terrain surface)
+            if (y + 2 < 48) {
               const blockAbove = chunk.getBlock(lx, y + 1, lz);
-              if (blockAbove !== BlockType.AIR && blockAbove !== BlockType.WATER && blockAbove !== BlockType.BEDROCK) {
+              const block2Above = chunk.getBlock(lx, y + 2, lz);
+              if (
+                blockAbove !== BlockType.AIR && blockAbove !== BlockType.WATER && blockAbove !== BlockType.BEDROCK &&
+                block2Above !== BlockType.AIR && block2Above !== BlockType.WATER
+              ) {
                 chunk.setBlock(lx, y + 1, lz, BlockType.AIR);
               }
             }
