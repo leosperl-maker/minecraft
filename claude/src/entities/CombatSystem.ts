@@ -3,6 +3,7 @@ import { MobManager } from './MobManager';
 import { Entity } from './Entity';
 import { Player } from '../player/Player';
 import { ATTACK_COOLDOWN, ATTACK_REACH, KNOCKBACK_FORCE, PLAYER_HURT_INVINCIBILITY } from '../utils/constants';
+import { ITEM_DEFINITIONS } from '../ui/ItemTypes';
 
 export interface CombatHitResult {
   hit: boolean;
@@ -17,6 +18,7 @@ export class CombatSystem {
 
   private attackCooldown: number = 0;
   private lastAimedMob: Entity | null = null;
+  private heldItemType: number = -1;
 
   constructor(mobManager: MobManager, player: Player, camera: THREE.PerspectiveCamera) {
     this.mobManager = mobManager;
@@ -72,9 +74,15 @@ export class CombatSystem {
     entity.takeDamage(damage, kbX, kbZ, KNOCKBACK_FORCE);
   }
 
+  setHeldItemType(type: number): void {
+    this.heldItemType = type;
+  }
+
   private getPlayerAttackDamage(): number {
-    // Base damage with fist = 1
-    // Could be extended to check held weapon
+    if (this.heldItemType >= 0) {
+      const def = ITEM_DEFINITIONS[this.heldItemType];
+      if (def && (def as any).attackDamage) return (def as any).attackDamage;
+    }
     return 1;
   }
 

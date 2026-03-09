@@ -36,6 +36,7 @@ export class Entity {
   // Timers
   hurtTimer: number = 0;
   deathTimer: number = 0;
+  burnTimer: number = 0;
   private readonly HURT_FLASH_DURATION = 0.3;
   private readonly DEATH_DURATION = 1.0;
 

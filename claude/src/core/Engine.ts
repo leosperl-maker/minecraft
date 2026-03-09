@@ -27,6 +27,7 @@ import { FOV, NEAR_PLANE, FAR_PLANE } from '../utils/constants';
 import { worldSeed } from '../utils/noise';
 import { MobManager } from '../entities/MobManager';
 import { CombatSystem } from '../entities/CombatSystem';
+import { MobType } from '../entities/MobTypes';
 import { WeatherSystem } from '../rendering/WeatherSystem';
 import { DeathScreen } from '../ui/DeathScreen';
 import { AchievementManager } from '../ui/Achievements';
@@ -150,6 +151,28 @@ export class Engine {
     // Mob system
     this.mobManager = new MobManager(this.scene, this.physics, this.world);
     this.combatSystem = new CombatSystem(this.mobManager, this.player, this.camera);
+
+    // Wire mob kill callback (drops, XP, kill count)
+    this.mobManager.onMobKilled = (entity) => {
+      // Spawn item drops
+      for (const drop of entity.definition.dropItems) {
+        const count = drop.minCount + Math.floor(Math.random() * (drop.maxCount - drop.minCount + 1));
+        if (count > 0) {
+          this.droppedItems.spawnItem(
+            entity.x,
+            entity.y + 0.5,
+            entity.z,
+            drop.itemType as ItemType,
+            count,
+          );
+        }
+      }
+      // Award XP
+      this.xpSystem.addXP(this.getMobXP(entity.mobType));
+      this.soundEngine.play('xp_pickup', 0.3);
+      // Increment kill counter
+      this.player.mobsKilled++;
+    };
 
     // Shadow system
     this.shadowSystem = new ShadowSystem(this.atlas);
@@ -671,7 +694,9 @@ export class Engine {
     this.droppedItems.update(dt, this.player, this.inventory);
 
     // HUD
+    this.combatSystem.setHeldItemType(heldItemType);
     this.hud.setAimingAtMob(this.combatSystem.isAimingAtMob());
+    this.hud.setXPData(this.xpSystem.getLevel(), this.xpSystem.getProgress());
     this.hud.update(this.fps, this.player, this.sky, dt);
     if (this.gameState === 'playing') {
       this.hud.handleInput(this.input);
@@ -878,6 +903,20 @@ export class Engine {
       case BlockType.DIAMOND_ORE: return ItemType.DIAMOND;
       case BlockType.EMERALD_ORE: return ItemType.EMERALD;
       default: return null;
+    }
+  }
+
+  private getMobXP(mobType: MobType): number {
+    switch (mobType) {
+      case MobType.WITHER_DRAGON: return 50;
+      case MobType.ENDERMAN: return 5;
+      case MobType.ZOMBIE:
+      case MobType.SKELETON:
+      case MobType.CREEPER:
+      case MobType.SPIDER:
+      case MobType.SHARK: return 5;
+      case MobType.WOLF: return 3;
+      default: return 1;
     }
   }
 
